@@ -10,11 +10,30 @@ import UIKit
 
 private let reuseIdentifier = "MenuCell"
 
+enum MenuOptions: Int, CaseIterable, CustomStringConvertible {
+    case yourTrips
+    case settings
+    case logout
+    
+    var description: String {
+        switch self {
+        case .yourTrips: return "Your Trips"
+        case .settings: return "Settings"
+        case .logout: return "Log Out"
+        }
+    }
+}
+
+protocol MenuControllerDelegate: class {
+    func didSelect(option: MenuOptions)
+}
+
 class MenuController: UITableViewController {
     
     // MARK: - Properties
     
     private let user: User
+    weak var delegate: MenuControllerDelegate?
     
     private lazy var menuHeader: MenuHeader = {
         let frame = CGRect(x: 0,
@@ -59,12 +78,21 @@ class MenuController: UITableViewController {
 
 extension MenuController {
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 3
+        return MenuOptions.allCases.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier, for: indexPath)
         cell.textLabel?.text = "Menu Option"
+        
+        guard let option = MenuOptions(rawValue: indexPath.row) else { return UITableViewCell() }
+        cell.textLabel?.text = option.description
+        
         return cell
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard let option = MenuOptions(rawValue: indexPath.row) else { return }
+        delegate?.didSelect(option: option)
     }
 }
