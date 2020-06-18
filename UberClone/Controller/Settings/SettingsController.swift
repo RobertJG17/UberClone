@@ -10,6 +10,10 @@ import UIKit
 
 private let reuseIdentifier = "LocationCell"
 
+protocol SettingsControllerDelegate: class {
+    func updateUser(_ controller: SettingsController)
+}
+
 enum LocationType: Int, CaseIterable, CustomStringConvertible {
     case home
     case work
@@ -33,8 +37,10 @@ class SettingsController: UITableViewController {
      
     // MARK: - Properties
     
-    private let user: User
+    var user: User
     private let locationManager = LocationHandler.shared.locationManager
+    weak var delegate: SettingsControllerDelegate?
+    var userInfoUpdated = false
     
     private lazy var infoHeader: UserInfoHeader = {
         let frame = CGRect(x: 0, y: 0, width: view.frame.width, height: 100)
@@ -62,10 +68,23 @@ class SettingsController: UITableViewController {
     // MARK: - Selectors
     
     @objc func handleDismissal() {
+        if userInfoUpdated {
+            delegate?.updateUser(self)
+        }
+        
         self.dismiss(animated: true, completion: nil)
     }
     
     // MARK: Helper Functions
+    
+    func locationText(forType type: LocationType) -> String {
+        switch type {
+        case .home:
+            return user.homeLocation ?? type.subtitle
+        case .work:
+            return user.workLocation ?? type.subtitle
+        }
+    }
     
     func configureTableView() {
         tableView.rowHeight = 60
@@ -115,8 +134,9 @@ extension SettingsController {
         let cell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier, for: indexPath) as! LocationCell
         
         guard let type = LocationType(rawValue: indexPath.row) else { return cell }
+        cell.titleLabel.text = type.description
+        cell.addressLabel.text = locationText(forType: type)
         
-        cell.type = type
         return cell
     }
     
@@ -135,6 +155,16 @@ extension SettingsController: AddLocationControllerDelegate {
     func updateLocation(locationString: String, type: LocationType) {
         PassengerService.shared.saveLocation(locationString: locationString, type: type) { (err, ref) in
             self.dismiss(animated: true, completion: nil)
+            self.userInfoUpdated = true
+            
+            switch type {
+            case .home:
+                self.user.homeLocation = locationString
+            case .work:
+                self.user.workLocation = locationString
+            }
+            
+            self.tableView.reloadData()
         }
     }
 }
