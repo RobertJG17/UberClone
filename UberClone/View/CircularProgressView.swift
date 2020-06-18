@@ -20,6 +20,8 @@ class CircularProgressView: UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
+        
+        configureCircleLayers()
     }
     
     required init?(coder: NSCoder) {
@@ -29,7 +31,7 @@ class CircularProgressView: UIView {
     // MARK: - Helper Functions
     
     private func configureCircleLayers() {
-        pulsatingLayer = circleShapeLayer(strokeColor: .clear, fillColor: .red)
+        pulsatingLayer = circleShapeLayer(strokeColor: .clear, fillColor: .mainBlueTint)
         layer.addSublayer(pulsatingLayer)
         
         trackLayer = circleShapeLayer(strokeColor: .clear, fillColor: .clear)
@@ -58,5 +60,33 @@ class CircularProgressView: UIView {
         layer.position = self.center
         
         return layer
+    }
+    
+    func animatePulsatingLayer() {
+        let animation = CABasicAnimation(keyPath: "transform.scale")
+        
+        animation.toValue = 1.25
+        animation.duration = 1
+        animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        animation.autoreverses = true
+        animation.repeatCount = Float.infinity
+        
+        pulsatingLayer.add(animation, forKey: "pulsing")
+    }
+    
+    func setProgressWithAnimation(duration: TimeInterval, value: Float, completion: @escaping() -> Void) {
+        
+        CATransaction.begin()
+        CATransaction.setCompletionBlock(completion)
+        
+        let animation = CABasicAnimation(keyPath: "strokeEnd")
+        animation.duration = duration
+        animation.fromValue = 1
+        animation.toValue = value
+        animation.timingFunction = CAMediaTimingFunction(name: .linear)
+        progressLayer.strokeEnd = CGFloat(value)
+        progressLayer.add(animation, forKey: "animateProgress")
+        
+        CATransaction.commit()
     }
 }
