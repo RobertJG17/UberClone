@@ -98,7 +98,6 @@ class HomeController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         guard let trip = trip else { return }
-        print("DEBUG: Trip state is \(trip.state)")
     }
     
     // MARK: - Selectors
@@ -131,6 +130,18 @@ class HomeController: UIViewController {
             switch state {
             case .requested:
                 break
+            case .denied:
+                self.shouldPresentLoadingView(false)
+                self.presentAlertController(withTitle: "Oops",
+                                            message: "It looks like we couldn't find you a driver. Please try again...")
+                self.configureActionButton(config: .showMenu)
+                UIView.animate(withDuration: 2) {
+                    self.inputActivationView.alpha = 1
+                }
+                self.removeAnnotationsAndOverlays()
+                PassengerService.shared.deleteTrip { (err, ref) in
+                    self.centerMapOnUserLocation()
+                }
             case .accepted:
                 self.shouldPresentLoadingView(false)
                 self.removeAnnotationsAndOverlays()
