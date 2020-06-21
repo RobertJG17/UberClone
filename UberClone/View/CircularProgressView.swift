@@ -8,6 +8,12 @@
 
 import UIKit
 
+// Purpose of this class:
+//
+// To implement a loading pulse view for drivers
+// as a line animates in a full circle, presenting a
+// nice visual aesthetic.
+
 class CircularProgressView: UIView {
     
     // MARK: - Properties
